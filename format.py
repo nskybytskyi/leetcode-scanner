@@ -86,9 +86,6 @@ if __name__ == "__main__":
         id=1,
         title="Two Sum",
         slug="two-sum",
-        difficulty="Easy",
-        total_acs=0,
-        total_submitted=0,
         paid_only=False,
     )
 

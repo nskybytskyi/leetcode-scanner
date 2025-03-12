@@ -1,18 +1,76 @@
 # Developed with assistance from ChatGPT
 import requests
 from dataclasses import dataclass
-from typing import Iterator
+from typing import Iterator, Self
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class LeetCodeProblem:
+    """
+    Represents a LeetCode problem with essential attributes.
+
+    Attributes:
+        id (int): The unique identifier of the problem.
+        title (str): The title of the problem.
+        slug (str): The URL-friendly slug of the problem.
+        paid_only (bool): Indicates whether the problem requires a premium subscription.
+    """
+
     id: int
     title: str
     slug: str
-    difficulty: str
-    total_acs: int
-    total_submitted: int
     paid_only: bool
+
+    @classmethod
+    def from_api_response(cls, response: dict) -> Self:
+        """
+        Creates a LeetCodeProblem instance from an API response.
+
+        Args:
+            response (dict): The JSON dictionary from LeetCode's API.
+
+        Returns:
+            Self: An instance of LeetCodeProblem.
+        """
+        stat = response["stat"]
+        return cls(
+            id=stat["question_id"],
+            title=stat["question__title"],
+            slug=stat["question__title_slug"],
+            paid_only=response["paid_only"],
+        )
+
+
+def test_leetcode_problem():
+    sample_response = {
+        "stat": {
+            "question_id": 3825,
+            "question__article__live": None,
+            "question__article__slug": None,
+            "question__article__has_video_solution": None,
+            "question__title": "Apply Substitutions",
+            "question__title_slug": "apply-substitutions",
+            "question__hide": False,
+            "total_acs": 227,
+            "total_submitted": 254,
+            "frontend_question_id": 3481,
+            "is_new_question": True,
+        },
+        "status": None,
+        "difficulty": {"level": 2},
+        "paid_only": True,
+        "is_favor": False,
+        "frequency": 0,
+        "progress": 0,
+    }
+
+    problem = LeetCodeProblem.from_api_response(sample_response)
+    assert problem.id == 3825
+    assert problem.title == "Apply Substitutions"
+    assert problem.slug == "apply-substitutions"
+    assert problem.paid_only is True
+
+    print("All tests passed!")
 
 
 def fetch_all_problems() -> Iterator[LeetCodeProblem]:
@@ -24,28 +82,9 @@ def fetch_all_problems() -> Iterator[LeetCodeProblem]:
     url = "https://leetcode.com/api/problems/algorithms/"
     response = requests.get(url)
     response.raise_for_status()
-    data = response.json()
-
-    for pair in data.get("stat_status_pairs", []):
-        stat = pair.get("stat", {})
-        difficulty_level = pair.get("difficulty", {}).get("level", 0)
-        difficulty = {1: "Easy", 2: "Medium", 3: "Hard"}.get(
-            difficulty_level, "Unknown"
-        )
-
-        yield LeetCodeProblem(
-            id=stat.get("question_id"),
-            title=stat.get("question__title"),
-            slug=stat.get("question__title_slug"),
-            difficulty=difficulty,
-            total_acs=stat.get("total_acs"),
-            total_submitted=stat.get("total_submitted"),
-            paid_only=pair.get("paid_only", False),
-        )
+    problems = response.json().get("stat_status_pairs")
+    yield from map(LeetCodeProblem.from_api_response, problems)
 
 
-# Example usage:
 if __name__ == "__main__":
-    for problem in fetch_all_problems():
-        print(problem)
-        break  # Only print the first problem for demonstration
+    test_leetcode_problem()
