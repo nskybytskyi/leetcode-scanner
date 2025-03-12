@@ -3,7 +3,7 @@ import os
 import subprocess
 import requests
 from submission import LeetCodeSubmission, fetch_user_submissions
-from problem import LeetCodeProblem, fetch_all_problems
+from problem import LeetCodeProblem
 from filter import filter_latest_accepted_python
 from format import save_and_commit_submission
 

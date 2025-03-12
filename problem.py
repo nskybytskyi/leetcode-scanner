@@ -1,7 +1,5 @@
-# Developed with assistance from ChatGPT
-import requests
 from dataclasses import dataclass
-from typing import Iterator, Self
+from typing import Self
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,19 +69,6 @@ def test_leetcode_problem():
     assert problem.paid_only is True
 
     print("All tests passed!")
-
-
-def fetch_all_problems() -> Iterator[LeetCodeProblem]:
-    """
-    Fetches the list of all LeetCode algorithm problems as an iterable.
-    Yields:
-        LeetCodeProblem instances one by one.
-    """
-    url = "https://leetcode.com/api/problems/algorithms/"
-    response = requests.get(url)
-    response.raise_for_status()
-    problems = response.json().get("stat_status_pairs")
-    yield from map(LeetCodeProblem.from_api_response, problems)
 
 
 if __name__ == "__main__":

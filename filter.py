@@ -3,7 +3,8 @@ import requests
 import os
 import logging
 from typing import Iterator, Optional
-from problem import fetch_all_problems, LeetCodeProblem
+from problem import LeetCodeProblem
+from fetch import fetch_all_problems
 from submission import fetch_user_submissions, LeetCodeSubmission
 
 
