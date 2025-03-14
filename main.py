@@ -2,11 +2,13 @@
 import os
 import subprocess
 import requests
-from filter import filter_latest_accepted_python
+
+from fetch import fetch_all_submissions
+from filter import filter_latest_submissions
 from format import save_and_commit_submission
 
 
-def main(username: str) -> None:
+def main() -> None:
     """Main function to scan user submissions and make git commits."""
     # Initialize Git repository (if not already initialized)
     if not os.path.isdir(".git"):
@@ -18,7 +20,10 @@ def main(username: str) -> None:
     session.cookies.set("LEETCODE_SESSION", os.getenv("LEETCODE_SESSION"))
 
     # Get filtered list of latest accepted Python submissions
-    for problem, submission in filter_latest_accepted_python(username, session):
+    submissions = fetch_all_submissions(session)
+    for problem, submission in filter_latest_submissions(
+        submissions, language="python3", status="Accepted"
+    ):
         # Save and commit each accepted Python submission
         save_and_commit_submission((problem, submission))
 
@@ -27,8 +32,6 @@ def main(username: str) -> None:
     print("Pushed all commits to the repository.")
 
 
-# Example usage:
 if __name__ == "__main__":
-    # Assuming you have set the LEETCODE_SESSION environment variable and want to scan a specific user's submissions
-    username = "nika-skybytska"  # Replace with your actual LeetCode username
-    main(username)
+    # Assuming you have set the LEETCODE_SESSION environment variable
+    main()

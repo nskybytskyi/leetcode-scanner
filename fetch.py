@@ -23,7 +23,7 @@ def fetch_all_problems() -> Iterable[LeetCodeProblem]:
     yield from map(LeetCodeProblem.from_api_response, problems)
 
 
-def fetch_user_submissions(
+def fetch_problem_submissions(
     problem_slug: str, session: requests.Session
 ) -> Iterable[LeetCodeSubmission]:
     """Fetches all submissions for a given problem, retrying on 403 and 429 errors."""
@@ -58,8 +58,36 @@ def fetch_user_submissions(
         yield LeetCodeSubmission.from_api_response(submission)
 
 
+def fetch_all_submissions(
+    session: requests.Session,
+) -> Iterable[tuple[LeetCodeProblem, LeetCodeSubmission]]:
+    """
+    Fetches all submissions for each problem available on LeetCode.
+
+    Args:
+        session (requests.Session): An authenticated session.
+
+    Yields:
+        Tuple[LeetCodeProblem, LeetCodeSubmission]: Problem and its corresponding submission.
+    """
+    for problem in fetch_all_problems():
+        try:
+            for submission in fetch_problem_submissions(problem.slug, session):
+                yield problem, submission
+        except requests.HTTPError as e:
+            if e.response.status_code == 403:
+                logging.warning(
+                    f"Skipping paid-only problem: {problem.slug} (403 Forbidden)"
+                )
+            else:
+                logging.error(
+                    f"Unexpected error fetching submissions for {problem.slug}: {e}"
+                )
+            continue  # Move to the next problem
+
+
 class TestFetchUserSubmissions(unittest.TestCase):
-    def test_fetch_user_submissions_mock(self):
+    def test_fetch_problem_submissions_mock(self):
         session = Mock()
         session.get.return_value.status_code = 200
         session.get.return_value.json.return_value = {
@@ -87,7 +115,7 @@ class TestFetchUserSubmissions(unittest.TestCase):
                 },
             ]
         }
-        submissions = list(fetch_user_submissions("two-sum", session))
+        submissions = list(fetch_problem_submissions("two-sum", session))
         self.assertEqual(len(submissions), 1)
         self.assertEqual(submissions[0].problem_slug, "two-sum")
         self.assertEqual(submissions[0].status, "Accepted")
