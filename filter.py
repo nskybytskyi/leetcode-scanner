@@ -4,8 +4,8 @@ import os
 import logging
 from typing import Iterator, Optional
 from problem import LeetCodeProblem
-from fetch import fetch_all_problems
-from submission import fetch_user_submissions, LeetCodeSubmission
+from fetch import fetch_all_problems, fetch_user_submissions
+from submission import LeetCodeSubmission
 
 
 def filter_latest_accepted_python(
@@ -25,7 +25,7 @@ def filter_latest_accepted_python(
         latest_submission: Optional[LeetCodeSubmission] = None
 
         try:
-            for submission in fetch_user_submissions(problem.slug, username, session):
+            for submission in fetch_user_submissions(problem.slug, session):
                 if submission.status == "Accepted" and submission.lang == "python3":
                     if (
                         latest_submission is None
